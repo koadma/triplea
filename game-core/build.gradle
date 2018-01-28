@@ -255,13 +255,7 @@ task generateInstallers(type: Install4jTask, dependsOn: [shadowJar, downloadAsse
 task prepareInstallers(group: 'release', dependsOn: [generateInstallers]) {
     doLast {
         ant.chmod(dir: releasesDir, perm: '+x', includes: '*.sh')
-    }
-}
-
-task prepareArtifacts(group: 'release', dependsOn: [generateZipReleases, prepareInstallers]) {
-    doLast {
         def artifacts = [
-            file("$distsDir/triplea-$version-server.zip"),
             file("$releasesDir/TripleA_${version}_macos.dmg"),
             file("$releasesDir/TripleA_${version}_unix.sh"),
             file("$releasesDir/TripleA_${version}_windows-32bit.exe"),
@@ -280,7 +274,30 @@ task prepareArtifacts(group: 'release', dependsOn: [generateZipReleases, prepare
     }
 }
 
-task release(group: 'release', dependsOn: [prepareArtifacts]) {}
+task prepareArtifacts(group: 'release', dependsOn: [generateZipReleases, allPlatform, lobbyServer]) {
+    doLast {
+        
+        def artifacts = [
+            file("$distsDir/game-core-$version-all_platforms.zip"),
+            file("$distsDir/game-core-$version-server.zip")
+        ]
+        artifacts.each {
+            if (!it.exists()) {
+                throw new GradleException("artifact '$it' does not exist")
+            }
+        }
+
+        copy {
+            from artifacts
+            into artifactsDir
+            rename { String fileName ->
+               fileName.replace('game-core', 'triplea') 
+            }
+        }
+    }
+}
+
+task release(group: 'release', dependsOn: [prepareInstallers, prepareArtifacts]) {}
 
 gradle.taskGraph.whenReady { graph ->
     graph.getAllTasks().any({
