@@ -1,5 +1,7 @@
 package games.strategy.engine.config.client;
 
+import java.io.File;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import games.strategy.engine.config.FilePropertyReader;
@@ -11,11 +13,20 @@ import games.strategy.util.Version;
  */
 public final class GameEnginePropertyReader {
   public static final String GAME_ENGINE_PROPERTIES_FILE = "game_engine.properties";
+  private static final String  DEVELOPMENT_PATH = "game-core" + File.separator + GAME_ENGINE_PROPERTIES_FILE;
 
   private final PropertyReader propertyReader;
 
   public GameEnginePropertyReader() {
-    this(new FilePropertyReader(GAME_ENGINE_PROPERTIES_FILE));
+    this(new FilePropertyReader(loadFile(GAME_ENGINE_PROPERTIES_FILE)));
+  }
+
+  private static String loadFile(final String path) {
+    if(!(new File(path).exists())) {
+      return DEVELOPMENT_PATH;
+    } else {
+      return path;
+    }
   }
 
   @VisibleForTesting
